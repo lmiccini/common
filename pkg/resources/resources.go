@@ -37,11 +37,17 @@ func DeletePods(ctx context.Context, r client.Client, nodeName string) error {
 	log.Info("starting to delete pods", "node name", nodeName)
 
 	pod := &corev1.Pod{}
+	pvc := &corev1.PersistentVolumeClaim{}
 	for _, ns := range namespaces.Items {
-		deleteOptions.Namespace = ns.Name
+		deleteOptions.Namespace = "openstack"
 		err := r.DeleteAllOf(ctx, pod, deleteOptions)
 		if err != nil {
 			log.Error(err, "failed to delete pods of node", "namespace", ns.Name)
+			return err
+		}
+		err = r.DeleteAllOf(ctx, pvc, deleteOptions)
+		if err != nil {
+			log.Error(err, "failed to delete pvc of node", "namespace", ns.Name)
 			return err
 		}
 	}
